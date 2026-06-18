@@ -108,9 +108,9 @@ export default function RecordListPage() {
                     component={RouterLink}
                     to={`/records/${record.id}`}
                     sx={{
-                      color: 'inherit',
-                      textDecoration: 'none',
-                      '&:hover': { color: 'primary.main', textDecoration: 'underline' },
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                      '&:hover': { color: 'primary.dark' },
                     }}
                   >
                     {record.spread_name}

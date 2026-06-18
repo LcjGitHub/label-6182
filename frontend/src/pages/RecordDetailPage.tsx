@@ -4,7 +4,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Divider,
   Paper,
@@ -51,40 +50,57 @@ export default function RecordDetailPage() {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" py={8}>
+      <Box display="flex" flexDirection="column" alignItems="center" py={8} gap={2}>
         <CircularProgress />
+        <Typography variant="body2" color="text.secondary">
+          正在加载记录详情…
+        </Typography>
       </Box>
     );
   }
 
   if (isError || !record) {
     return (
-      <Alert severity="error">
-        {(error as Error)?.message || '记录不存在或加载失败'}
-      </Alert>
+      <Stack spacing={2}>
+        <Alert severity="error">
+          {(error as Error)?.message || '记录不存在或加载失败'}
+        </Alert>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/')}
+        >
+          返回列表
+        </Button>
+      </Stack>
     );
   }
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: 2 }}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="flex-start"
-        mb={3}
-      >
-        <Box>
-          <Typography variant="h5" fontWeight={700} gutterBottom>
-            {record.spread_name}
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Chip label={formatDate(record.date)} size="small" color="primary" />
-            <Chip label={`牌组：${record.deck}`} size="small" variant="outlined" />
-          </Stack>
-        </Box>
-      </Stack>
+      <Typography variant="h5" fontWeight={700} gutterBottom>
+        {record.spread_name}
+      </Typography>
 
       <Stack spacing={3}>
+        <Box>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            日期
+          </Typography>
+          <Typography variant="body1">{formatDate(record.date)}</Typography>
+        </Box>
+
+        <Divider />
+
+        <Box>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            牌组
+          </Typography>
+          <Typography variant="body1">{record.deck}</Typography>
+        </Box>
+
+        <Divider />
+
         <Box>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
             关键牌
