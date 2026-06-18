@@ -1,5 +1,6 @@
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import StyleIcon from '@mui/icons-material/Style';
 import { AppBar, Box, Button, Container, Toolbar, Typography } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
@@ -7,8 +8,10 @@ import { Link as RouterLink } from 'react-router-dom';
 /** 全局页面布局 */
 export default function AppLayout() {
   const location = useLocation();
+  const isRecordsActive =
+    location.pathname === '/' || location.pathname.startsWith('/records');
   const isStatsActive = location.pathname === '/stats';
-  const isRecordsActive = !isStatsActive;
+  const isDecksActive = location.pathname === '/decks';
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -32,6 +35,19 @@ export default function AppLayout() {
               }}
             >
               练习记录
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/decks"
+              color="inherit"
+              variant={isDecksActive ? 'outlined' : 'text'}
+              startIcon={<StyleIcon fontSize="small" />}
+              sx={{
+                borderColor: 'rgba(255,255,255,0.5)',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
+              }}
+            >
+              牌组管理
             </Button>
             <Button
               component={RouterLink}

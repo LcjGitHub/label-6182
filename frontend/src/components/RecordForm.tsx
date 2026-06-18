@@ -2,11 +2,18 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
 } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
+import { fetchDeckPresets } from '../api';
 import type { PracticeRecordInput } from '../types';
 
 interface RecordFormProps {
@@ -44,6 +51,11 @@ export default function RecordForm({
     initialValues ?? emptyValues,
   );
 
+  const { data: deckPresets, isLoading: decksLoading } = useQuery({
+    queryKey: ['deckPresets'],
+    queryFn: fetchDeckPresets,
+  });
+
   useEffect(() => {
     if (initialValues) {
       setValues(initialValues);
@@ -56,10 +68,19 @@ export default function RecordForm({
       setValues((prev) => ({ ...prev, [field]: event.target.value }));
     };
 
+  const handleSelectChange =
+    (field: keyof PracticeRecordInput) =>
+    (event: { target: { value: unknown } }) => {
+      setValues((prev) => ({ ...prev, [field]: event.target.value as string }));
+    };
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     onSubmit(values);
   };
+
+  const deckOptions = deckPresets ?? [];
+  const currentDeckInOptions = deckOptions.some((d) => d.name === values.deck);
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -82,13 +103,31 @@ export default function RecordForm({
           required
           fullWidth
         />
-        <TextField
-          label="牌组"
-          value={values.deck}
-          onChange={handleChange('deck')}
-          required
-          fullWidth
-        />
+        {decksLoading ? (
+          <Box display="flex" alignItems="center" py={1.5}>
+            <CircularProgress size={20} sx={{ mr: 2 }} />
+            <span style={{ color: '#666' }}>加载牌组预设…</span>
+          </Box>
+        ) : (
+          <FormControl fullWidth required>
+            <InputLabel id="deck-select-label">牌组</InputLabel>
+            <Select
+              labelId="deck-select-label"
+              label="牌组"
+              value={values.deck}
+              onChange={handleSelectChange('deck')}
+            >
+              {values.deck && !currentDeckInOptions && (
+                <MenuItem value={values.deck}>{values.deck}</MenuItem>
+              )}
+              {deckOptions.map((preset) => (
+                <MenuItem key={preset.id} value={preset.name}>
+                  {preset.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
         <TextField
           label="关键牌"
           value={values.key_cards}

@@ -1,4 +1,6 @@
 import type {
+  DeckPreset,
+  DeckPresetInput,
   PracticeRecord,
   PracticeRecordInput,
   StatsData,
@@ -89,4 +91,66 @@ export async function fetchStats(): Promise<StatsData> {
     throw new Error('加载统计数据失败');
   }
   return res.json();
+}
+
+/**
+ * 获取全部牌组预设
+ */
+export async function fetchDeckPresets(): Promise<DeckPreset[]> {
+  const res = await fetch(`${API_BASE}/deck-presets`);
+  if (!res.ok) {
+    throw new Error('加载牌组预设失败');
+  }
+  return res.json();
+}
+
+/**
+ * 新建牌组预设
+ * @param data - 表单数据
+ */
+export async function createDeckPreset(
+  data: DeckPresetInput,
+): Promise<DeckPreset> {
+  const res = await fetch(`${API_BASE}/deck-presets`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? '创建失败');
+  }
+  return res.json();
+}
+
+/**
+ * 更新牌组预设
+ * @param id - 预设 ID
+ * @param data - 表单数据
+ */
+export async function updateDeckPreset(
+  id: number,
+  data: DeckPresetInput,
+): Promise<DeckPreset> {
+  const res = await fetch(`${API_BASE}/deck-presets/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? '更新失败');
+  }
+  return res.json();
+}
+
+/**
+ * 删除牌组预设
+ * @param id - 预设 ID
+ */
+export async function deleteDeckPreset(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/deck-presets/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error('删除失败');
+  }
 }

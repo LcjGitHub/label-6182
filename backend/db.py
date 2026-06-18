@@ -46,6 +46,21 @@ SEED_RECORDS = [
     },
 ]
 
+SEED_DECK_PRESETS = [
+    {
+        "name": "韦特塔罗",
+        "description": "最经典的塔罗牌系，图像直观易懂，适合初学者和日常占卜使用。",
+    },
+    {
+        "name": "马赛塔罗",
+        "description": "欧洲传统塔罗体系，注重数字符号与结构，适合深度解读与研究。",
+    },
+    {
+        "name": "托特塔罗",
+        "description": "克劳利所创，融合卡巴拉与占星，象征体系深邃，适合进阶研习。",
+    },
+]
+
 
 def get_connection() -> sqlite3.Connection:
     """获取 SQLite 连接，启用 Row 工厂以便按列名访问。"""
@@ -83,6 +98,29 @@ def init_db() -> None:
                     (:date, :spread_name, :deck, :key_cards, :summary)
                 """,
                 SEED_RECORDS,
+            )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS deck_presets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+            )
+            """
+        )
+        count = conn.execute("SELECT COUNT(*) FROM deck_presets").fetchone()[0]
+        if count == 0:
+            conn.executemany(
+                """
+                INSERT INTO deck_presets
+                    (name, description)
+                VALUES
+                    (:name, :description)
+                """,
+                SEED_DECK_PRESETS,
             )
         conn.commit()
     finally:

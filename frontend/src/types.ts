@@ -16,6 +16,21 @@ export type PracticeRecordInput = Omit<
   'id' | 'created_at' | 'updated_at'
 >;
 
+/** 牌组预设实体 */
+export interface DeckPreset {
+  id: number;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 创建/更新牌组预设时的请求体 */
+export type DeckPresetInput = Omit<
+  DeckPreset,
+  'id' | 'created_at' | 'updated_at'
+>;
+
 /** 按月统计条目 */
 export interface MonthlyStat {
   month: string;
