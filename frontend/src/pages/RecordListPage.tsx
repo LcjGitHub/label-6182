@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { deleteRecord, fetchRecords } from '../api';
 import type { PracticeRecord } from '../types';
@@ -55,7 +55,6 @@ export default function RecordListPage() {
 
   const handleClear = () => {
     setSearchKeyword('');
-    setSubmittedKeyword('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -64,6 +63,12 @@ export default function RecordListPage() {
     }
   };
 
+  useEffect(() => {
+    if (searchKeyword === '' && submittedKeyword !== '') {
+      setSubmittedKeyword('');
+    }
+  }, [searchKeyword, submittedKeyword]);
+
   const deleteMutation = useMutation({
     mutationFn: deleteRecord,
     onSuccess: () => {
@@ -71,6 +76,8 @@ export default function RecordListPage() {
       setDeleteTarget(null);
     },
   });
+
+  const records = data ?? [];
 
   if (isLoading) {
     return (
@@ -87,8 +94,6 @@ export default function RecordListPage() {
       </Alert>
     );
   }
-
-  const records = data ?? [];
 
   return (
     <>
@@ -130,7 +135,7 @@ export default function RecordListPage() {
                 <Button
                   size="small"
                   onClick={handleClear}
-                  disabled={isLoading}
+                  disabled={isLoading || isFetching}
                   sx={{ minWidth: 'auto', p: 0.5 }}
                 >
                   <ClearIcon fontSize="small" />
@@ -150,7 +155,11 @@ export default function RecordListPage() {
         </Button>
       </Stack>
 
-      {records.length === 0 ? (
+      {isFetching ? (
+        <Box display="flex" justifyContent="center" py={8}>
+          <CircularProgress />
+        </Box>
+      ) : records.length === 0 ? (
         <Alert severity="info">
           {submittedKeyword
             ? `未找到包含「${submittedKeyword}」的记录，请尝试其他关键词。`
