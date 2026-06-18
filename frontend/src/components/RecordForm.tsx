@@ -9,6 +9,7 @@ import {
   Select,
   Stack,
   TextField,
+  Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -104,9 +105,11 @@ export default function RecordForm({
           fullWidth
         />
         {decksLoading ? (
-          <Box display="flex" alignItems="center" py={1.5}>
-            <CircularProgress size={20} sx={{ mr: 2 }} />
-            <span style={{ color: '#666' }}>加载牌组预设…</span>
+          <Box display="flex" alignItems="center" py={1.5} gap={2}>
+            <CircularProgress size={20} />
+            <Typography variant="body2" color="text.secondary">
+              正在加载牌组预设…
+            </Typography>
           </Box>
         ) : (
           <FormControl fullWidth required>
@@ -116,7 +119,11 @@ export default function RecordForm({
               label="牌组"
               value={values.deck}
               onChange={handleSelectChange('deck')}
+              displayEmpty
             >
+              <MenuItem value="" disabled>
+                请选择牌组
+              </MenuItem>
               {values.deck && !currentDeckInOptions && (
                 <MenuItem value={values.deck}>{values.deck}</MenuItem>
               )}

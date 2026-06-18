@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 REQUIRED_FIELDS = ("date", "spread_name", "deck", "key_cards", "summary")
-DECK_PRESET_REQUIRED_FIELDS = ("name", "description")
+DECK_PRESET_REQUIRED_FIELDS = ("name",)
 
 
 def validate_deck_preset_payload(data: dict | None) -> tuple[dict | None, str | None]:
@@ -19,9 +19,13 @@ def validate_deck_preset_payload(data: dict | None) -> tuple[dict | None, str | 
     cleaned = {}
     for field in DECK_PRESET_REQUIRED_FIELDS:
         value = data.get(field)
-        if value is None or (field == "name" and str(value).strip() == ""):
+        if value is None or str(value).strip() == "":
             return None, f"字段 {field} 不能为空"
-        cleaned[field] = str(value).strip() if value else ""
+        cleaned[field] = str(value).strip()
+    description_value = data.get("description")
+    cleaned["description"] = (
+        str(description_value).strip() if description_value else ""
+    )
     return cleaned, None
 
 
