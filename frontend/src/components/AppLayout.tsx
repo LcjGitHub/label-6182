@@ -1,5 +1,6 @@
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import StyleIcon from '@mui/icons-material/Style';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import { AppBar, Box, Button, Container, Toolbar, Typography } from '@mui/material';
@@ -11,6 +12,7 @@ export default function AppLayout() {
   const location = useLocation();
   const isRecordsActive =
     location.pathname === '/' || location.pathname.startsWith('/records');
+  const isCalendarActive = location.pathname === '/calendar';
   const isStatsActive = location.pathname === '/stats';
   const isDecksActive = location.pathname === '/decks';
   const isTemplatesActive = location.pathname === '/templates';
@@ -37,6 +39,19 @@ export default function AppLayout() {
               }}
             >
               练习记录
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/calendar"
+              color="inherit"
+              variant={isCalendarActive ? 'outlined' : 'text'}
+              startIcon={<CalendarMonthIcon fontSize="small" />}
+              sx={{
+                borderColor: 'rgba(255,255,255,0.5)',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
+              }}
+            >
+              练习日历
             </Button>
             <Button
               component={RouterLink}

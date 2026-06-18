@@ -65,3 +65,16 @@ export interface StatsData {
   by_deck: NamedStat[];
   by_spread: NamedStat[];
 }
+
+/** 日历单日数据 */
+export interface CalendarDateItem {
+  date: string;
+  count: number;
+}
+
+/** 日历月度数据 */
+export interface CalendarMonthData {
+  year: number;
+  month: number;
+  dates: CalendarDateItem[];
+}

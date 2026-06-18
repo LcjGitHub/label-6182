@@ -2,6 +2,7 @@ import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
+import CalendarPage from './pages/CalendarPage';
 import DeckPresetPage from './pages/DeckPresetPage';
 import RecordDetailPage from './pages/RecordDetailPage';
 import RecordFormPage from './pages/RecordFormPage';
@@ -40,6 +41,7 @@ export default function App() {
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<RecordListPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
               <Route path="templates" element={<SpreadTemplatePage />} />
               <Route path="decks" element={<DeckPresetPage />} />
               <Route path="stats" element={<StatisticsPage />} />

@@ -1,4 +1,5 @@
 import type {
+  CalendarMonthData,
   DeckPreset,
   DeckPresetInput,
   PracticeRecord,
@@ -229,4 +230,20 @@ export async function deleteSpreadTemplate(id: number): Promise<void> {
   if (!res.ok) {
     throw new Error('删除失败');
   }
+}
+
+export async function fetchCalendarMonth(year: number, month: number): Promise<CalendarMonthData> {
+  const res = await fetch(`${API_BASE}/calendar?year=${year}&month=${month}`);
+  if (!res.ok) {
+    throw new Error('加载日历数据失败');
+  }
+  return res.json();
+}
+
+export async function fetchRecordsByDate(date: string): Promise<PracticeRecord[]> {
+  const res = await fetch(`${API_BASE}/records/by-date?date=${encodeURIComponent(date)}`);
+  if (!res.ok) {
+    throw new Error('加载当日记录失败');
+  }
+  return res.json();
 }

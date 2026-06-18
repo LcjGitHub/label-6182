@@ -71,6 +71,49 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.get("/api/calendar")
+def get_calendar():
+    """获取指定月份的练习日历数据：哪些日期有记录及对应条数。"""
+    year = request.args.get("year", type=int)
+    month = request.args.get("month", type=int)
+    if not year or not month or month < 1 or month > 12:
+        return jsonify({"error": "请提供有效的 year 和 month 参数"}), 400
+
+    month_str = f"{year:04d}-{month:02d}"
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT date, COUNT(*) AS count
+            FROM practice_records
+            WHERE strftime('%Y-%m', date) = ?
+            GROUP BY date
+            ORDER BY date ASC
+            """,
+            (month_str,),
+        ).fetchall()
+        return jsonify({"year": year, "month": month, "dates": [row_to_dict(row) for row in rows]})
+    finally:
+        conn.close()
+
+
+@app.get("/api/records/by-date")
+def list_records_by_date():
+    """获取指定日期的全部练习记录。"""
+    date = request.args.get("date", "").strip()
+    if not date:
+        return jsonify({"error": "请提供 date 参数"}), 400
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM practice_records WHERE date = ? ORDER BY id DESC",
+            (date,),
+        ).fetchall()
+        return jsonify([row_to_dict(row) for row in rows])
+    finally:
+        conn.close()
+
+
 @app.get("/api/records")
 def list_records():
     """获取练习记录列表，按日期倒序。"""
