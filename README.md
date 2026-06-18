@@ -14,7 +14,32 @@
 
 ## 首次安装
 
-### 后端
+### 方式一：一键安装脚本（推荐）
+
+项目根目录提供了跨平台的一键安装脚本，自动完成后端虚拟环境创建、依赖安装以及前端依赖安装。
+
+**Windows PowerShell：**
+
+```powershell
+.\install.ps1
+```
+
+> 如遇执行策略限制，可先运行：`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+**macOS / Linux：**
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+脚本执行成功后，可直接跳转到下方「启动」章节运行服务。
+
+### 方式二：手动分步安装
+
+如遇脚本问题或需要自定义安装流程，可按以下步骤手动安装。
+
+#### 后端
 
 ```powershell
 cd backend
@@ -32,7 +57,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 前端
+#### 前端
 
 ```powershell
 cd frontend
@@ -142,9 +167,39 @@ npm run dev
 | DELETE | `/api/deck-presets/:id` | 删除单条预设 |
 | POST | `/api/deck-presets/batch-delete` | 批量删除预设，请求体 `{ "ids": [1,2,3] }`，返回 `{ "deleted": <实际删除条数> }` |
 
+## CI/CD 自动化流水线
+
+项目已配置 GitHub Actions 自动化流水线，配置文件位于 [.github/workflows/ci.yml](.github/workflows/ci.yml)。
+
+### 触发条件
+
+- 代码推送到任意分支时自动触发
+- 向任意分支提交 Pull Request 时自动触发
+
+### 流水线步骤
+
+流水线在 Ubuntu 环境下依次执行以下步骤，**任一步骤失败则整个流水线标记为失败**：
+
+| 步骤 | 说明 |
+|------|------|
+| 检出代码 | 使用 `actions/checkout@v4` 拉取仓库代码 |
+| 安装 Node.js | 配置 Node.js 18.x，启用 npm 缓存 |
+| 安装 Python | 配置 Python 3.10，启用 pip 缓存 |
+| 安装后端依赖 | 创建虚拟环境并安装 `backend/requirements.txt` 中的依赖 |
+| 安装前端依赖 | 执行 `npm install` 安装前端依赖 |
+| 后端冒烟测试 | 启动 Flask 服务，请求 `GET /api/health` 接口，验证返回 `{"status": "ok"}` |
+| 前端构建 | 执行 `npm run build`，验证 TypeScript 编译与 Vite 生产构建 |
+
+### 查看结果
+
+推送代码后，可在 GitHub 仓库的 **Actions** 标签页查看流水线执行状态与详细日志。
+
 ## 目录结构
 
 ```
+├── .github/
+│   └── workflows/
+│       └── ci.yml          # GitHub Actions CI 流水线配置
 ├── backend/
 │   ├── app.py              # Flask 入口与路由（记录、牌组预设、牌阵模板 API）
 │   ├── db.py               # SQLite 初始化与 seed
@@ -164,5 +219,7 @@ npm run dev
 │   │   ├── types.ts        # TypeScript 类型定义
 │   │   └── api.ts          # API 封装
 │   └── package.json
+├── install.ps1             # Windows 一键安装脚本
+├── install.sh              # macOS / Linux 一键安装脚本
 └── README.md
 ```

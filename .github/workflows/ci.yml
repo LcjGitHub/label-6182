@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [ 18.x ]
+        python-version: [ "3.10" ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Start backend and run health check
+        working-directory: backend
+        run: |
+          source venv/bin/activate
+          python app.py &
+          BACKEND_PID=$!
+          echo "Backend started with PID: $BACKEND_PID"
+
+          echo "Waiting for backend to be ready..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:4000/api/health > /dev/null 2>&1; then
+              echo "Backend is ready!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "ERROR: Backend failed to start within 30 seconds"
+              kill $BACKEND_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+          echo "Running health check..."
+          HEALTH_RESPONSE=$(curl -s http://localhost:4000/api/health)
+          echo "Health check response: $HEALTH_RESPONSE"
+
+          if echo "$HEALTH_RESPONSE" | grep -q '"status": *"ok"'; then
+            echo "Health check passed!"
+          else
+            echo "ERROR: Health check failed"
+            kill $BACKEND_PID 2>/dev/null || true
+            exit 1
+          fi
+
+          kill $BACKEND_PID 2>/dev/null || true
+          echo "Backend stopped successfully"
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

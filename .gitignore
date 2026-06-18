@@ -129,6 +129,8 @@ tmp/
 
 # Text files
 *.txt
+!requirements.txt
+!**/requirements.txt
 
 # App data
 history_snapshots.json
