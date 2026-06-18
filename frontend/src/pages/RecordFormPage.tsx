@@ -2,7 +2,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createRecord, fetchRecord, fetchRecords, updateRecord } from '../api';
 import RecordForm from '../components/RecordForm';
@@ -16,6 +16,7 @@ export default function RecordFormPage() {
   const isEdit = Boolean(id);
   const recordId = Number(id);
   const [copiedValues, setCopiedValues] = useState<PracticeRecordInput | undefined>();
+  const [showCopySuccess, setShowCopySuccess] = useState(false);
 
   const {
     data: record,
@@ -28,7 +29,12 @@ export default function RecordFormPage() {
     enabled: isEdit && !Number.isNaN(recordId),
   });
 
-  const { data: latestRecords } = useQuery({
+  const {
+    data: latestRecords,
+    isLoading: recordsLoading,
+    isError: recordsError,
+    error: recordsErrorObj,
+  } = useQuery({
     queryKey: ['records', '', ''],
     queryFn: () => fetchRecords('', ''),
     enabled: !isEdit,
@@ -58,7 +64,15 @@ export default function RecordFormPage() {
       key_cards: latestRecord.key_cards,
       summary: '',
     });
+    setShowCopySuccess(true);
   };
+
+  useEffect(() => {
+    if (showCopySuccess) {
+      const timer = setTimeout(() => setShowCopySuccess(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showCopySuccess]);
 
   if (isEdit && isLoading) {
     return (
@@ -84,6 +98,11 @@ export default function RecordFormPage() {
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: 2 }}>
+      {!isEdit && recordsError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {(recordsErrorObj as Error).message || '加载历史记录失败'}
+        </Alert>
+      )}
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -95,14 +114,26 @@ export default function RecordFormPage() {
           {isEdit ? '编辑记录' : '新建记录'}
         </Typography>
         {!isEdit && (
-          <Button
-            variant="outlined"
-            startIcon={<ContentCopyIcon />}
-            onClick={handleCopyLast}
-            disabled={!latestRecord}
-          >
-            复制上一条
-          </Button>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            {recordsLoading && (
+              <Typography variant="body2" color="text.secondary">
+                正在加载历史记录…
+              </Typography>
+            )}
+            {showCopySuccess && (
+              <Typography variant="body2" color="success.main">
+                已复制上一条
+              </Typography>
+            )}
+            <Button
+              variant="outlined"
+              startIcon={<ContentCopyIcon />}
+              onClick={handleCopyLast}
+              disabled={!latestRecord || recordsLoading}
+            >
+              复制上一条
+            </Button>
+          </Stack>
         )}
       </Stack>
       <RecordForm
