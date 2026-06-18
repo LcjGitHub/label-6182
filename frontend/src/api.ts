@@ -1,4 +1,8 @@
-import type { PracticeRecord, PracticeRecordInput } from './types';
+import type {
+  PracticeRecord,
+  PracticeRecordInput,
+  StatsData,
+} from './types';
 
 const API_BASE = '/api';
 
@@ -74,4 +78,15 @@ export async function deleteRecord(id: number): Promise<void> {
   if (!res.ok) {
     throw new Error('删除失败');
   }
+}
+
+/**
+ * 获取练习统计数据
+ */
+export async function fetchStats(): Promise<StatsData> {
+  const res = await fetch(`${API_BASE}/stats`);
+  if (!res.ok) {
+    throw new Error('加载统计数据失败');
+  }
+  return res.json();
 }

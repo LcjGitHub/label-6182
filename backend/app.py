@@ -138,6 +138,49 @@ def delete_record(record_id: int):
         conn.close()
 
 
+@app.get("/api/stats")
+def get_stats():
+    """获取练习统计数据：按月、牌组、牌阵名聚合。"""
+    conn = get_connection()
+    try:
+        monthly_rows = conn.execute(
+            """
+            SELECT strftime('%Y-%m', date) AS month, COUNT(*) AS count
+            FROM practice_records
+            GROUP BY strftime('%Y-%m', date)
+            ORDER BY month ASC
+            """
+        ).fetchall()
+
+        deck_rows = conn.execute(
+            """
+            SELECT deck AS name, COUNT(*) AS count
+            FROM practice_records
+            GROUP BY deck
+            ORDER BY count DESC
+            """
+        ).fetchall()
+
+        spread_rows = conn.execute(
+            """
+            SELECT spread_name AS name, COUNT(*) AS count
+            FROM practice_records
+            GROUP BY spread_name
+            ORDER BY count DESC
+            """
+        ).fetchall()
+
+        return jsonify(
+            {
+                "monthly": [row_to_dict(row) for row in monthly_rows],
+                "by_deck": [row_to_dict(row) for row in deck_rows],
+                "by_spread": [row_to_dict(row) for row in spread_rows],
+            }
+        )
+    finally:
+        conn.close()
+
+
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=4000, debug=True)

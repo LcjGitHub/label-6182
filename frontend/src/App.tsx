@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import RecordFormPage from './pages/RecordFormPage';
 import RecordListPage from './pages/RecordListPage';
+import StatisticsPage from './pages/StatisticsPage';
 
 const theme = createTheme({
   palette: {
@@ -36,6 +37,7 @@ export default function App() {
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<RecordListPage />} />
+              <Route path="stats" element={<StatisticsPage />} />
               <Route path="records/new" element={<RecordFormPage />} />
               <Route path="records/:id/edit" element={<RecordFormPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
