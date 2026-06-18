@@ -1,7 +1,10 @@
-import { Alert, Box, CircularProgress, Paper, Typography } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createRecord, fetchRecord, updateRecord } from '../api';
+import { createRecord, fetchRecord, fetchRecords, updateRecord } from '../api';
 import RecordForm from '../components/RecordForm';
 import type { PracticeRecordInput } from '../types';
 
@@ -12,6 +15,7 @@ export default function RecordFormPage() {
   const queryClient = useQueryClient();
   const isEdit = Boolean(id);
   const recordId = Number(id);
+  const [copiedValues, setCopiedValues] = useState<PracticeRecordInput | undefined>();
 
   const {
     data: record,
@@ -24,6 +28,15 @@ export default function RecordFormPage() {
     enabled: isEdit && !Number.isNaN(recordId),
   });
 
+  const { data: latestRecords } = useQuery({
+    queryKey: ['records', '', ''],
+    queryFn: () => fetchRecords('', ''),
+    enabled: !isEdit,
+    staleTime: 60_000,
+  });
+
+  const latestRecord = latestRecords?.[0];
+
   const saveMutation = useMutation({
     mutationFn: (values: PracticeRecordInput) =>
       isEdit ? updateRecord(recordId, values) : createRecord(values),
@@ -35,6 +48,17 @@ export default function RecordFormPage() {
       navigate('/');
     },
   });
+
+  const handleCopyLast = () => {
+    if (!latestRecord) return;
+    setCopiedValues({
+      date: dayjs().format('YYYY-MM-DD'),
+      spread_name: latestRecord.spread_name,
+      deck: latestRecord.deck,
+      key_cards: latestRecord.key_cards,
+      summary: '',
+    });
+  };
 
   if (isEdit && isLoading) {
     return (
@@ -56,13 +80,31 @@ export default function RecordFormPage() {
         key_cards: record.key_cards,
         summary: record.summary,
       }
-    : undefined;
+    : copiedValues;
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: 2 }}>
-      <Typography variant="h5" fontWeight={700} mb={3}>
-        {isEdit ? '编辑记录' : '新建记录'}
-      </Typography>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+        spacing={2}
+      >
+        <Typography variant="h5" fontWeight={700}>
+          {isEdit ? '编辑记录' : '新建记录'}
+        </Typography>
+        {!isEdit && (
+          <Button
+            variant="outlined"
+            startIcon={<ContentCopyIcon />}
+            onClick={handleCopyLast}
+            disabled={!latestRecord}
+          >
+            复制上一条
+          </Button>
+        )}
+      </Stack>
       <RecordForm
         initialValues={initialValues}
         submitting={saveMutation.isPending}
