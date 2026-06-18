@@ -103,7 +103,16 @@ export default function RecordListPage() {
                   alignItems="flex-start"
                   mb={1}
                 >
-                  <Typography variant="h6" component="h2">
+                  <Typography
+                    variant="h6"
+                    component={RouterLink}
+                    to={`/records/${record.id}`}
+                    sx={{
+                      color: 'inherit',
+                      textDecoration: 'none',
+                      '&:hover': { color: 'primary.main', textDecoration: 'underline' },
+                    }}
+                  >
                     {record.spread_name}
                   </Typography>
                   <Chip

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import DeckPresetPage from './pages/DeckPresetPage';
+import RecordDetailPage from './pages/RecordDetailPage';
 import RecordFormPage from './pages/RecordFormPage';
 import RecordListPage from './pages/RecordListPage';
 import SpreadTemplatePage from './pages/SpreadTemplatePage';
@@ -43,6 +44,7 @@ export default function App() {
               <Route path="decks" element={<DeckPresetPage />} />
               <Route path="stats" element={<StatisticsPage />} />
               <Route path="records/new" element={<RecordFormPage />} />
+              <Route path="records/:id" element={<RecordDetailPage />} />
               <Route path="records/:id/edit" element={<RecordFormPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
