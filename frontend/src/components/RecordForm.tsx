@@ -205,8 +205,17 @@ export default function RecordForm({
         <DialogTitle>选择牌阵模板</DialogTitle>
         <DialogContent dividers>
           {templatesLoading ? (
-            <Box display="flex" justifyContent="center" py={4}>
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              py={4}
+              gap={2}
+            >
               <CircularProgress />
+              <Typography variant="body2" color="text.secondary">
+                正在加载牌阵模板…
+              </Typography>
             </Box>
           ) : templateOptions.length === 0 ? (
             <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>

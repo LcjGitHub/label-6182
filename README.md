@@ -58,7 +58,7 @@ cd backend && source venv/bin/activate && python app.py
 ```
 
 服务地址：`http://localhost:4000`  
-首次启动会自动创建 `backend/data/tarot.db` 并写入 **5 条** seed 数据。
+首次启动会自动创建 `backend/data/tarot.db` 并写入练习记录、牌组预设、牌阵模板等 seed 数据。
 
 ### 前端
 
@@ -73,11 +73,18 @@ npm run dev
 
 ## 功能说明
 
-- **列表页**：按日期倒序展示练习记录，支持编辑、删除
-- **表单页**：新建 / 编辑记录
-- **字段**：日期、牌阵名、牌组、关键牌、解读摘要
+- **练习记录**：列表页按日期倒序展示，支持编辑、删除；表单页新建/编辑记录
+- **练习记录字段**：日期、牌阵名、牌组、关键牌、解读摘要
+- **牌阵模板库**（导航入口：顶部「牌阵模板」菜单项，路径 `/templates`）：
+  - 模板列表页：展示所有模板的名称、适用场景、建议牌位数量
+  - 详情查看：点击「详情」查看完整的适用场景说明
+  - 完整 CRUD：支持新建、编辑、删除模板
+  - 五条默认模板：每日一牌、三牌阵/圣三角、四元素牌阵、凯尔特十字、关系牌阵/恋人牌阵
+- **记录表单集成**：新建/编辑记录时，牌阵名字段旁提供「从模板选择」按钮，点击弹出模板列表，选中后自动填充牌阵名
 
 ## API 概览
+
+### 练习记录
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -87,18 +94,34 @@ npm run dev
 | PUT | `/api/records/:id` | 更新 |
 | DELETE | `/api/records/:id` | 删除 |
 
+### 牌阵模板
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/spread-templates` | 模板列表（按创建顺序） |
+| GET | `/api/spread-templates/:id` | 单条模板详情 |
+| POST | `/api/spread-templates` | 新建模板 |
+| PUT | `/api/spread-templates/:id` | 更新模板 |
+| DELETE | `/api/spread-templates/:id` | 删除模板 |
+
 ## 目录结构
 
 ```
 ├── backend/
-│   ├── app.py              # Flask 入口与路由
+│   ├── app.py              # Flask 入口与路由（记录、牌组预设、牌阵模板 API）
 │   ├── db.py               # SQLite 初始化与 seed
 │   ├── requirements.txt
 │   └── data/tarot.db       # 运行时生成
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/          # 列表页、表单页
+│   │   ├── pages/          # 各功能页面
+│   │   │   ├── RecordListPage.tsx       # 练习记录列表
+│   │   │   ├── RecordFormPage.tsx       # 新建/编辑记录
+│   │   │   ├── SpreadTemplatePage.tsx   # 牌阵模板库
+│   │   │   ├── DeckPresetPage.tsx       # 牌组预设管理
+│   │   │   └── StatisticsPage.tsx       # 练习统计
 │   │   ├── components/     # 布局、表单组件
+│   │   ├── types.ts        # TypeScript 类型定义
 │   │   └── api.ts          # API 封装
 │   └── package.json
 └── README.md
