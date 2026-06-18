@@ -8,7 +8,7 @@ import { Link as RouterLink } from 'react-router-dom';
 export default function AppLayout() {
   const location = useLocation();
   const isStatsActive = location.pathname === '/stats';
-  const isListActive = location.pathname === '/';
+  const isRecordsActive = !isStatsActive;
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -25,7 +25,7 @@ export default function AppLayout() {
               component={RouterLink}
               to="/"
               color="inherit"
-              variant={isListActive ? 'outlined' : 'text'}
+              variant={isRecordsActive ? 'outlined' : 'text'}
               sx={{
                 borderColor: 'rgba(255,255,255,0.5)',
                 '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },

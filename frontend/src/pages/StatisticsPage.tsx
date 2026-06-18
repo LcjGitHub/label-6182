@@ -148,8 +148,11 @@ export default function StatisticsPage() {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" py={8}>
+      <Box display="flex" flexDirection="column" alignItems="center" py={8} gap={2}>
         <CircularProgress />
+        <Typography variant="body2" color="text.secondary">
+          正在加载统计数据…
+        </Typography>
       </Box>
     );
   }
