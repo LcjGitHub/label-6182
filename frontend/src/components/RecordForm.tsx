@@ -1,10 +1,19 @@
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   FormControl,
   InputLabel,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
   MenuItem,
   Select,
   Stack,
@@ -14,8 +23,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { fetchDeckPresets } from '../api';
-import type { PracticeRecordInput } from '../types';
+import { fetchDeckPresets, fetchSpreadTemplates } from '../api';
+import type { PracticeRecordInput, SpreadTemplate } from '../types';
 
 interface RecordFormProps {
   /** 初始表单值，编辑模式传入 */
@@ -51,10 +60,16 @@ export default function RecordForm({
   const [values, setValues] = useState<PracticeRecordInput>(
     initialValues ?? emptyValues,
   );
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
 
   const { data: deckPresets, isLoading: decksLoading } = useQuery({
     queryKey: ['deckPresets'],
     queryFn: fetchDeckPresets,
+  });
+
+  const { data: spreadTemplates, isLoading: templatesLoading } = useQuery({
+    queryKey: ['spreadTemplates'],
+    queryFn: fetchSpreadTemplates,
   });
 
   useEffect(() => {
@@ -80,8 +95,14 @@ export default function RecordForm({
     onSubmit(values);
   };
 
+  const handleSelectTemplate = (template: SpreadTemplate) => {
+    setValues((prev) => ({ ...prev, spread_name: template.name }));
+    setTemplateDialogOpen(false);
+  };
+
   const deckOptions = deckPresets ?? [];
   const currentDeckInOptions = deckOptions.some((d) => d.name === values.deck);
+  const templateOptions = spreadTemplates ?? [];
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -97,13 +118,25 @@ export default function RecordForm({
           required
           fullWidth
         />
-        <TextField
-          label="牌阵名"
-          value={values.spread_name}
-          onChange={handleChange('spread_name')}
-          required
-          fullWidth
-        />
+        <Box>
+          <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+            <TextField
+              label="牌阵名"
+              value={values.spread_name}
+              onChange={handleChange('spread_name')}
+              required
+              fullWidth
+            />
+            <Button
+              variant="outlined"
+              startIcon={<ViewQuiltIcon />}
+              onClick={() => setTemplateDialogOpen(true)}
+              sx={{ whiteSpace: 'nowrap', height: 56 }}
+            >
+              从模板选择
+            </Button>
+          </Stack>
+        </Box>
         {decksLoading ? (
           <Box display="flex" alignItems="center" py={1.5} gap={2}>
             <CircularProgress size={20} />
@@ -162,6 +195,66 @@ export default function RecordForm({
           </Button>
         </Stack>
       </Stack>
+
+      <Dialog
+        open={templateDialogOpen}
+        onClose={() => setTemplateDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>选择牌阵模板</DialogTitle>
+        <DialogContent dividers>
+          {templatesLoading ? (
+            <Box display="flex" justifyContent="center" py={4}>
+              <CircularProgress />
+            </Box>
+          ) : templateOptions.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
+              暂无可用的牌阵模板
+            </Typography>
+          ) : (
+            <List sx={{ py: 0 }}>
+              {templateOptions.map((template) => (
+                <ListItem key={template.id} disablePadding divider>
+                  <ListItemButton onClick={() => handleSelectTemplate(template)}>
+                    <ListItemText
+                      primary={
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body1" fontWeight={600}>
+                            {template.name}
+                          </Typography>
+                          <Chip
+                            label={`${template.card_count} 张`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Stack>
+                      }
+                      secondary={
+                        template.scenario ? (
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              mt: 0.5,
+                            }}
+                          >
+                            {template.scenario}
+                          </Typography>
+                        ) : null
+                      }
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

@@ -31,6 +31,22 @@ export type DeckPresetInput = Omit<
   'id' | 'created_at' | 'updated_at'
 >;
 
+/** 牌阵模板实体 */
+export interface SpreadTemplate {
+  id: number;
+  name: string;
+  scenario: string;
+  card_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 创建/更新牌阵模板时的请求体 */
+export type SpreadTemplateInput = Omit<
+  SpreadTemplate,
+  'id' | 'created_at' | 'updated_at'
+>;
+
 /** 按月统计条目 */
 export interface MonthlyStat {
   month: string;

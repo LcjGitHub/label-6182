@@ -3,6 +3,8 @@ import type {
   DeckPresetInput,
   PracticeRecord,
   PracticeRecordInput,
+  SpreadTemplate,
+  SpreadTemplateInput,
   StatsData,
 } from './types';
 
@@ -150,6 +152,80 @@ export async function updateDeckPreset(
  */
 export async function deleteDeckPreset(id: number): Promise<void> {
   const res = await fetch(`${API_BASE}/deck-presets/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error('删除失败');
+  }
+}
+
+/**
+ * 获取全部牌阵模板
+ */
+export async function fetchSpreadTemplates(): Promise<SpreadTemplate[]> {
+  const res = await fetch(`${API_BASE}/spread-templates`);
+  if (!res.ok) {
+    throw new Error('加载牌阵模板失败');
+  }
+  return res.json();
+}
+
+/**
+ * 获取单条牌阵模板
+ * @param id - 模板 ID
+ */
+export async function fetchSpreadTemplate(id: number): Promise<SpreadTemplate> {
+  const res = await fetch(`${API_BASE}/spread-templates/${id}`);
+  if (!res.ok) {
+    throw new Error('牌阵模板不存在');
+  }
+  return res.json();
+}
+
+/**
+ * 新建牌阵模板
+ * @param data - 表单数据
+ */
+export async function createSpreadTemplate(
+  data: SpreadTemplateInput,
+): Promise<SpreadTemplate> {
+  const res = await fetch(`${API_BASE}/spread-templates`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? '创建失败');
+  }
+  return res.json();
+}
+
+/**
+ * 更新牌阵模板
+ * @param id - 模板 ID
+ * @param data - 表单数据
+ */
+export async function updateSpreadTemplate(
+  id: number,
+  data: SpreadTemplateInput,
+): Promise<SpreadTemplate> {
+  const res = await fetch(`${API_BASE}/spread-templates/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? '更新失败');
+  }
+  return res.json();
+}
+
+/**
+ * 删除牌阵模板
+ * @param id - 模板 ID
+ */
+export async function deleteSpreadTemplate(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/spread-templates/${id}`, { method: 'DELETE' });
   if (!res.ok) {
     throw new Error('删除失败');
   }

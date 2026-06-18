@@ -5,6 +5,7 @@ import AppLayout from './components/AppLayout';
 import DeckPresetPage from './pages/DeckPresetPage';
 import RecordFormPage from './pages/RecordFormPage';
 import RecordListPage from './pages/RecordListPage';
+import SpreadTemplatePage from './pages/SpreadTemplatePage';
 import StatisticsPage from './pages/StatisticsPage';
 
 const theme = createTheme({
@@ -38,6 +39,7 @@ export default function App() {
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<RecordListPage />} />
+              <Route path="templates" element={<SpreadTemplatePage />} />
               <Route path="decks" element={<DeckPresetPage />} />
               <Route path="stats" element={<StatisticsPage />} />
               <Route path="records/new" element={<RecordFormPage />} />

@@ -61,6 +61,34 @@ SEED_DECK_PRESETS = [
     },
 ]
 
+SEED_SPREAD_TEMPLATES = [
+    {
+        "name": "每日一牌",
+        "scenario": "适合日常占卜与快速洞察，每日抽取一张牌作为当日能量指引或提示。",
+        "card_count": 1,
+    },
+    {
+        "name": "三牌阵 / 圣三角",
+        "scenario": "最经典的基础牌阵，适用于过去、现在、未来的时间流解读，可用于感情、事业、学业等各类问题。",
+        "card_count": 3,
+    },
+    {
+        "name": "四元素牌阵",
+        "scenario": "从火、水、风、土四元素角度分析问题，适合全面评估现状与行动方向。",
+        "card_count": 4,
+    },
+    {
+        "name": "凯尔特十字",
+        "scenario": "最经典的复杂牌阵，适用于深入分析具体问题，涵盖现状、挑战、潜意识、外部环境、未来发展等多维度。",
+        "card_count": 10,
+    },
+    {
+        "name": "关系牌阵 / 恋人牌阵",
+        "scenario": "专门用于情感关系解读，分析双方状态、关系现状、潜在问题与发展建议。",
+        "card_count": 6,
+    },
+]
+
 
 def get_connection() -> sqlite3.Connection:
     """获取 SQLite 连接，启用 Row 工厂以便按列名访问。"""
@@ -121,6 +149,30 @@ def init_db() -> None:
                     (:name, :description)
                 """,
                 SEED_DECK_PRESETS,
+            )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS spread_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                scenario TEXT NOT NULL DEFAULT '',
+                card_count INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+            )
+            """
+        )
+        count = conn.execute("SELECT COUNT(*) FROM spread_templates").fetchone()[0]
+        if count == 0:
+            conn.executemany(
+                """
+                INSERT INTO spread_templates
+                    (name, scenario, card_count)
+                VALUES
+                    (:name, :scenario, :card_count)
+                """,
+                SEED_SPREAD_TEMPLATES,
             )
         conn.commit()
     finally:

@@ -10,6 +10,7 @@ CORS(app)
 
 REQUIRED_FIELDS = ("date", "spread_name", "deck", "key_cards", "summary")
 DECK_PRESET_REQUIRED_FIELDS = ("name",)
+SPREAD_TEMPLATE_REQUIRED_FIELDS = ("name",)
 
 
 def validate_deck_preset_payload(data: dict | None) -> tuple[dict | None, str | None]:
@@ -26,6 +27,28 @@ def validate_deck_preset_payload(data: dict | None) -> tuple[dict | None, str | 
     cleaned["description"] = (
         str(description_value).strip() if description_value else ""
     )
+    return cleaned, None
+
+
+def validate_spread_template_payload(data: dict | None) -> tuple[dict | None, str | None]:
+    """校验牌阵模板请求体字段，返回 (数据, 错误信息)。"""
+    if not data:
+        return None, "请求体不能为空"
+    cleaned = {}
+    for field in SPREAD_TEMPLATE_REQUIRED_FIELDS:
+        value = data.get(field)
+        if value is None or str(value).strip() == "":
+            return None, f"字段 {field} 不能为空"
+        cleaned[field] = str(value).strip()
+    scenario_value = data.get("scenario")
+    cleaned["scenario"] = str(scenario_value).strip() if scenario_value else ""
+    card_count_value = data.get("card_count")
+    try:
+        cleaned["card_count"] = int(card_count_value) if card_count_value else 0
+    except (ValueError, TypeError):
+        return None, "字段 card_count 必须是整数"
+    if cleaned["card_count"] < 0:
+        return None, "字段 card_count 不能为负数"
     return cleaned, None
 
 
@@ -312,6 +335,125 @@ def delete_deck_preset(preset_id: int):
         conn.commit()
         if cursor.rowcount == 0:
             return jsonify({"error": "牌组预设不存在"}), 404
+        return "", 204
+    finally:
+        conn.close()
+
+
+@app.get("/api/spread-templates")
+def list_spread_templates():
+    """获取牌阵模板列表，按创建时间正序。"""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM spread_templates ORDER BY id ASC"
+        ).fetchall()
+        return jsonify([row_to_dict(row) for row in rows])
+    finally:
+        conn.close()
+
+
+@app.get("/api/spread-templates/<int:template_id>")
+def get_spread_template(template_id: int):
+    """获取单条牌阵模板。"""
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT * FROM spread_templates WHERE id = ?", (template_id,)
+        ).fetchone()
+        if row is None:
+            return jsonify({"error": "牌阵模板不存在"}), 404
+        return jsonify(row_to_dict(row))
+    finally:
+        conn.close()
+
+
+@app.post("/api/spread-templates")
+def create_spread_template():
+    """新建牌阵模板。"""
+    payload, error = validate_spread_template_payload(request.get_json(silent=True))
+    if error:
+        return jsonify({"error": error}), 400
+
+    conn = get_connection()
+    try:
+        existing = conn.execute(
+            "SELECT id FROM spread_templates WHERE name = ?", (payload["name"],)
+        ).fetchone()
+        if existing is not None:
+            return jsonify({"error": "该牌阵模板名称已存在"}), 400
+
+        cursor = conn.execute(
+            """
+            INSERT INTO spread_templates
+                (name, scenario, card_count)
+            VALUES
+                (:name, :scenario, :card_count)
+            """,
+            payload,
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM spread_templates WHERE id = ?", (cursor.lastrowid,)
+        ).fetchone()
+        return jsonify(row_to_dict(row)), 201
+    finally:
+        conn.close()
+
+
+@app.put("/api/spread-templates/<int:template_id>")
+def update_spread_template(template_id: int):
+    """更新牌阵模板。"""
+    payload, error = validate_spread_template_payload(request.get_json(silent=True))
+    if error:
+        return jsonify({"error": error}), 400
+
+    conn = get_connection()
+    try:
+        existing = conn.execute(
+            "SELECT id FROM spread_templates WHERE id = ?", (template_id,)
+        ).fetchone()
+        if existing is None:
+            return jsonify({"error": "牌阵模板不存在"}), 404
+
+        duplicate = conn.execute(
+            "SELECT id FROM spread_templates WHERE name = ? AND id != ?",
+            (payload["name"], template_id),
+        ).fetchone()
+        if duplicate is not None:
+            return jsonify({"error": "该牌阵模板名称已存在"}), 400
+
+        conn.execute(
+            """
+            UPDATE spread_templates
+            SET name = :name,
+                scenario = :scenario,
+                card_count = :card_count,
+                updated_at = datetime('now', 'localtime')
+            WHERE id = :id
+            """,
+            {**payload, "id": template_id},
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM spread_templates WHERE id = ?", (template_id,)
+        ).fetchone()
+        return jsonify(row_to_dict(row))
+    finally:
+        conn.close()
+
+
+@app.delete("/api/spread-templates/<int:template_id>")
+def delete_spread_template(template_id: int):
+    """删除牌阵模板。"""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM spread_templates WHERE id = ?", (template_id,)
+        )
+        conn.commit()
+        if cursor.rowcount == 0:
+            return jsonify({"error": "牌阵模板不存在"}), 404
         return "", 204
     finally:
         conn.close()
