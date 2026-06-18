@@ -12,7 +12,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Snackbar,
   Stack,
   Table,
@@ -33,7 +37,13 @@ import {
   fetchDeckPresets,
   updateDeckPreset,
 } from '../api';
-import type { DeckPreset, DeckPresetInput } from '../types';
+import type { DeckPreset, DeckPresetInput, SortOption } from '../types';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'date_desc', label: '日期（新→旧）' },
+  { value: 'date_asc', label: '日期（旧→新）' },
+  { value: 'name_asc', label: '名称（A→Z）' },
+];
 
 const emptyValues: DeckPresetInput = {
   name: '',
@@ -50,10 +60,11 @@ export default function DeckPresetPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortOption>('date_desc');
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['deckPresets'],
-    queryFn: fetchDeckPresets,
+    queryKey: ['deckPresets', sort],
+    queryFn: () => fetchDeckPresets(sort),
   });
 
   const saveMutation = useMutation({
@@ -231,9 +242,26 @@ export default function DeckPresetPage() {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h5" fontWeight={700}>
-          牌组预设管理
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Typography variant="h5" fontWeight={700}>
+            牌组预设管理
+          </Typography>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="deck-presets-sort-label">排序方式</InputLabel>
+            <Select
+              labelId="deck-presets-sort-label"
+              value={sort}
+              label="排序方式"
+              onChange={(e) => setSort(e.target.value as SortOption)}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
         <Stack direction="row" spacing={1}>
           <Button
             variant="outlined"

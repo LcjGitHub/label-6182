@@ -4,6 +4,7 @@ import type {
   DeckPresetInput,
   PracticeRecord,
   PracticeRecordInput,
+  SortOption,
   SpreadTemplate,
   SpreadTemplateInput,
   StatsData,
@@ -112,9 +113,14 @@ export async function fetchStats(): Promise<StatsData> {
 
 /**
  * 获取全部牌组预设
+ * @param sort - 排序方式，默认日期降序
  */
-export async function fetchDeckPresets(): Promise<DeckPreset[]> {
-  const res = await fetch(`${API_BASE}/deck-presets`);
+export async function fetchDeckPresets(
+  sort: SortOption = 'date_desc',
+): Promise<DeckPreset[]> {
+  const params = new URLSearchParams();
+  params.append('sort', sort);
+  const res = await fetch(`${API_BASE}/deck-presets?${params.toString()}`);
   if (!res.ok) {
     throw new Error('加载牌组预设失败');
   }
@@ -188,9 +194,14 @@ export async function batchDeleteDeckPresets(ids: number[]): Promise<number> {
 
 /**
  * 获取全部牌阵模板
+ * @param sort - 排序方式，默认日期降序
  */
-export async function fetchSpreadTemplates(): Promise<SpreadTemplate[]> {
-  const res = await fetch(`${API_BASE}/spread-templates`);
+export async function fetchSpreadTemplates(
+  sort: SortOption = 'date_desc',
+): Promise<SpreadTemplate[]> {
+  const params = new URLSearchParams();
+  params.append('sort', sort);
+  const res = await fetch(`${API_BASE}/spread-templates?${params.toString()}`);
   if (!res.ok) {
     throw new Error('加载牌阵模板失败');
   }

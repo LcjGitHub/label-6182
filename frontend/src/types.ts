@@ -78,3 +78,6 @@ export interface CalendarMonthData {
   month: number;
   dates: CalendarDateItem[];
 }
+
+/** 列表排序方式 */
+export type SortOption = 'date_desc' | 'date_asc' | 'name_asc';

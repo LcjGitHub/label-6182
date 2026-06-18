@@ -64,12 +64,12 @@ export default function RecordForm({
 
   const { data: deckPresets, isLoading: decksLoading } = useQuery({
     queryKey: ['deckPresets'],
-    queryFn: fetchDeckPresets,
+    queryFn: () => fetchDeckPresets(),
   });
 
   const { data: spreadTemplates, isLoading: templatesLoading } = useQuery({
     queryKey: ['spreadTemplates'],
-    queryFn: fetchSpreadTemplates,
+    queryFn: () => fetchSpreadTemplates(),
   });
 
   useEffect(() => {

@@ -13,7 +13,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -32,7 +36,13 @@ import {
   fetchSpreadTemplates,
   updateSpreadTemplate,
 } from '../api';
-import type { SpreadTemplate, SpreadTemplateInput } from '../types';
+import type { SortOption, SpreadTemplate, SpreadTemplateInput } from '../types';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'date_desc', label: '日期（新→旧）' },
+  { value: 'date_asc', label: '日期（旧→新）' },
+  { value: 'name_asc', label: '名称（A→Z）' },
+];
 
 const emptyValues: SpreadTemplateInput = {
   name: '',
@@ -49,10 +59,11 @@ export default function SpreadTemplatePage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SpreadTemplate | null>(null);
   const [detailTemplate, setDetailTemplate] = useState<SpreadTemplate | null>(null);
+  const [sort, setSort] = useState<SortOption>('date_desc');
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['spreadTemplates'],
-    queryFn: fetchSpreadTemplates,
+    queryKey: ['spreadTemplates', sort],
+    queryFn: () => fetchSpreadTemplates(sort),
   });
 
   const saveMutation = useMutation({
@@ -176,9 +187,26 @@ export default function SpreadTemplatePage() {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h5" fontWeight={700}>
-          牌阵模板库
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Typography variant="h5" fontWeight={700}>
+            牌阵模板库
+          </Typography>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="spread-templates-sort-label">排序方式</InputLabel>
+            <Select
+              labelId="spread-templates-sort-label"
+              value={sort}
+              label="排序方式"
+              onChange={(e) => setSort(e.target.value as SortOption)}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
         <Button
           variant="contained"
           startIcon={<AddIcon />}

@@ -282,11 +282,18 @@ def get_stats():
 
 @app.get("/api/deck-presets")
 def list_deck_presets():
-    """获取牌组预设列表，按创建时间正序。"""
+    """获取牌组预设列表，支持按日期升序、日期降序、名称字母排序。"""
+    sort = request.args.get("sort", "date_desc").strip()
+    valid_sorts = {
+        "date_asc": "ORDER BY created_at ASC, id ASC",
+        "date_desc": "ORDER BY created_at DESC, id DESC",
+        "name_asc": "ORDER BY name COLLATE NOCASE ASC, id ASC",
+    }
+    order_clause = valid_sorts.get(sort, valid_sorts["date_desc"])
     conn = get_connection()
     try:
         rows = conn.execute(
-            "SELECT * FROM deck_presets ORDER BY id ASC"
+            f"SELECT * FROM deck_presets {order_clause}"
         ).fetchall()
         return jsonify([row_to_dict(row) for row in rows])
     finally:
@@ -427,11 +434,18 @@ def delete_deck_preset(preset_id: int):
 
 @app.get("/api/spread-templates")
 def list_spread_templates():
-    """获取牌阵模板列表，按创建时间正序。"""
+    """获取牌阵模板列表，支持按日期升序、日期降序、名称字母排序。"""
+    sort = request.args.get("sort", "date_desc").strip()
+    valid_sorts = {
+        "date_asc": "ORDER BY created_at ASC, id ASC",
+        "date_desc": "ORDER BY created_at DESC, id DESC",
+        "name_asc": "ORDER BY name COLLATE NOCASE ASC, id ASC",
+    }
+    order_clause = valid_sorts.get(sort, valid_sorts["date_desc"])
     conn = get_connection()
     try:
         rows = conn.execute(
-            "SELECT * FROM spread_templates ORDER BY id ASC"
+            f"SELECT * FROM spread_templates {order_clause}"
         ).fetchall()
         return jsonify([row_to_dict(row) for row in rows])
     finally:
