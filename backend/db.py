@@ -3,10 +3,21 @@
 import os
 import sqlite3
 from pathlib import Path
+from typing import Optional
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
-DATABASE_PATH = DATA_DIR / "tarot.db"
+_default_db_path = DATA_DIR / "tarot.db"
+DATABASE_PATH = os.environ.get("DATABASE_PATH", str(_default_db_path))
+
+
+def set_database_path(path: Optional[str]) -> None:
+    """动态设置数据库路径，用于测试切换内存数据库。"""
+    global DATABASE_PATH
+    if path is None:
+        DATABASE_PATH = str(_default_db_path)
+    else:
+        DATABASE_PATH = path
 
 SEED_RECORDS = [
     {
