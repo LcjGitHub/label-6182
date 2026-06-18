@@ -32,7 +32,13 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { deleteRecord, fetchRecords } from '../api';
-import type { PracticeRecord } from '../types';
+import type { PracticeRecord, RecordSortOption } from '../types';
+
+const RECORD_SORT_OPTIONS: { value: RecordSortOption; label: string }[] = [
+  { value: 'date_desc', label: '日期（新→旧）' },
+  { value: 'date_asc', label: '日期（旧→新）' },
+  { value: 'spread_name_asc', label: '牌阵名（A→Z）' },
+];
 
 /**
  * 格式化展示日期
@@ -49,10 +55,11 @@ export default function RecordListPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [submittedKeyword, setSubmittedKeyword] = useState('');
   const [selectedDeck, setSelectedDeck] = useState('');
+  const [sort, setSort] = useState<RecordSortOption>('date_desc');
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ['records', submittedKeyword, selectedDeck],
-    queryFn: () => fetchRecords(submittedKeyword, selectedDeck),
+    queryKey: ['records', submittedKeyword, selectedDeck, sort],
+    queryFn: () => fetchRecords(submittedKeyword, selectedDeck, sort),
   });
 
   const deckOptions = Array.from(
@@ -117,9 +124,26 @@ export default function RecordListPage() {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h5" fontWeight={700}>
-          练习记录
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Typography variant="h5" fontWeight={700}>
+            练习记录
+          </Typography>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel id="records-sort-label">排序方式</InputLabel>
+            <Select
+              labelId="records-sort-label"
+              value={sort}
+              label="排序方式"
+              onChange={(e) => setSort(e.target.value as RecordSortOption)}
+            >
+              {RECORD_SORT_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
         <Button
           component={RouterLink}
           to="/records/new"

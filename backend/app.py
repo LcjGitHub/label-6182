@@ -116,9 +116,16 @@ def list_records_by_date():
 
 @app.get("/api/records")
 def list_records():
-    """获取练习记录列表，按日期倒序，支持关键词模糊搜索和牌组筛选。"""
+    """获取练习记录列表，支持关键词模糊搜索、牌组筛选和多种排序方式。"""
     keyword = request.args.get("keyword", "").strip()
     deck = request.args.get("deck", "").strip()
+    sort = request.args.get("sort", "date_desc").strip()
+    valid_sorts = {
+        "date_desc": "ORDER BY date DESC, id DESC",
+        "date_asc": "ORDER BY date ASC, id ASC",
+        "spread_name_asc": "ORDER BY spread_name COLLATE NOCASE ASC, id ASC",
+    }
+    order_clause = valid_sorts.get(sort, valid_sorts["date_desc"])
     conn = get_connection()
     try:
         conditions = []
@@ -134,7 +141,7 @@ def list_records():
         sql = f"""
             SELECT * FROM practice_records
             {where_clause}
-            ORDER BY date DESC, id DESC
+            {order_clause}
         """
         rows = conn.execute(sql, params).fetchall()
         return jsonify([row_to_dict(row) for row in rows])

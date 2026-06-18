@@ -81,3 +81,6 @@ export interface CalendarMonthData {
 
 /** 列表排序方式 */
 export type SortOption = 'date_desc' | 'date_asc' | 'name_asc';
+
+/** 练习记录排序方式 */
+export type RecordSortOption = 'date_desc' | 'date_asc' | 'spread_name_asc';
