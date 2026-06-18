@@ -172,8 +172,11 @@ export default function CalendarPage() {
           </Grid>
 
           {calendarQuery.isLoading ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress size={28} />
+            <Box display="flex" flexDirection="column" alignItems="center" py={8} gap={2}>
+              <CircularProgress />
+              <Typography variant="body2" color="text.secondary">
+                正在加载日历数据…
+              </Typography>
             </Box>
           ) : calendarQuery.isError ? (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -208,10 +211,10 @@ export default function CalendarPage() {
                         borderRadius: 2,
                         border: todayFlag ? '2px solid' : '1px solid',
                         borderColor: todayFlag ? 'primary.main' : 'divider',
-                        bgcolor: count > 0 ? 'primary.50' : 'transparent',
+                        bgcolor: count > 0 ? 'primary.100' : 'transparent',
                         transition: 'background-color 0.2s, box-shadow 0.2s',
                         '&:hover': {
-                          bgcolor: count > 0 ? 'primary.100' : 'action.hover',
+                          bgcolor: count > 0 ? 'primary.200' : 'action.hover',
                           boxShadow: 1,
                         },
                         position: 'relative',
@@ -272,8 +275,11 @@ export default function CalendarPage() {
         </Stack>
 
         {drawerQuery.isLoading ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress size={28} />
+          <Box display="flex" flexDirection="column" alignItems="center" py={8} gap={2}>
+            <CircularProgress />
+            <Typography variant="body2" color="text.secondary">
+              正在加载当日记录…
+            </Typography>
           </Box>
         ) : drawerQuery.isError ? (
           <Alert severity="error">

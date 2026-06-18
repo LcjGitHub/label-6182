@@ -82,6 +82,11 @@ npm run dev
   - 完整 CRUD：支持新建、编辑、删除模板
   - 五条默认模板：每日一牌、三牌阵/圣三角、四元素牌阵、凯尔特十字、关系牌阵/恋人牌阵
 - **记录表单集成**：新建/编辑记录时，牌阵名字段旁提供「从模板选择」按钮，点击弹出模板列表，选中后自动填充牌阵名
+- **练习日历**（导航入口：顶部「练习日历」菜单项，路径 `/calendar`）：
+  - 以月历形式展示，顶部可切换年份和月份，支持快速回到当月
+  - 有练习记录的日期以高亮底色显示，并标注当日记录条数
+  - 点击任意日期弹出右侧抽屉，列出该天全部练习记录摘要（牌阵名、牌组、关键牌、解牌摘要）
+  - 点击记录标题可跳转至详情页
 
 ## API 概览
 
@@ -94,6 +99,13 @@ npm run dev
 | POST | `/api/records` | 新建 |
 | PUT | `/api/records/:id` | 更新 |
 | DELETE | `/api/records/:id` | 删除 |
+
+### 练习日历
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/calendar?year=2026&month=6` | 按月查询练习日期及对应记录条数 |
+| GET | `/api/records/by-date?date=2026-06-15` | 按日期查询当天全部练习记录 |
 
 ### 牌阵模板
 
@@ -119,6 +131,7 @@ npm run dev
 │   │   │   ├── RecordListPage.tsx       # 练习记录列表
 │   │   │   ├── RecordDetailPage.tsx     # 练习记录详情
 │   │   │   ├── RecordFormPage.tsx       # 新建/编辑记录
+│   │   │   ├── CalendarPage.tsx         # 练习日历视图
 │   │   │   ├── SpreadTemplatePage.tsx   # 牌阵模板库
 │   │   │   ├── DeckPresetPage.tsx       # 牌组预设管理
 │   │   │   └── StatisticsPage.tsx       # 练习统计
