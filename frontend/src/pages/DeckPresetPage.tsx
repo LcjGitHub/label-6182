@@ -5,6 +5,7 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -25,6 +26,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
+  batchDeleteDeckPresets,
   createDeckPreset,
   deleteDeckPreset,
   fetchDeckPresets,
@@ -37,7 +39,6 @@ const emptyValues: DeckPresetInput = {
   description: '',
 };
 
-/** 牌组预设管理页 */
 export default function DeckPresetPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,6 +46,8 @@ export default function DeckPresetPage() {
   const [formValues, setFormValues] = useState<DeckPresetInput>(emptyValues);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeckPreset | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['deckPresets'],
@@ -73,6 +76,15 @@ export default function DeckPresetPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deckPresets'] });
       setDeleteTarget(null);
+    },
+  });
+
+  const batchDeleteMutation = useMutation({
+    mutationFn: batchDeleteDeckPresets,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deckPresets'] });
+      setSelectedIds(new Set());
+      setBatchDeleteOpen(false);
     },
   });
 
@@ -127,6 +139,37 @@ export default function DeckPresetPage() {
     });
   };
 
+  const handleToggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    const presets = data ?? [];
+    if (selectedIds.size === presets.length && presets.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(presets.map((p) => p.id)));
+    }
+  };
+
+  const handleBatchDelete = () => {
+    if (selectedIds.size > 0) {
+      setBatchDeleteOpen(true);
+    }
+  };
+
+  const confirmBatchDelete = () => {
+    batchDeleteMutation.mutate(Array.from(selectedIds));
+  };
+
   if (isLoading) {
     return (
       <Box
@@ -153,6 +196,8 @@ export default function DeckPresetPage() {
   }
 
   const presets = data ?? [];
+  const allSelected = presets.length > 0 && selectedIds.size === presets.length;
+  const someSelected = selectedIds.size > 0 && !allSelected;
 
   return (
     <>
@@ -165,13 +210,25 @@ export default function DeckPresetPage() {
         <Typography variant="h5" fontWeight={700}>
           牌组预设管理
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenCreate}
-        >
-          新建预设
-        </Button>
+        <Stack direction="row" spacing={1}>
+          {selectedIds.size > 0 && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteOutlineIcon />}
+              onClick={handleBatchDelete}
+            >
+              批量删除（{selectedIds.size}）
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+          >
+            新建预设
+          </Button>
+        </Stack>
       </Stack>
 
       {presets.length === 0 ? (
@@ -182,6 +239,13 @@ export default function DeckPresetPage() {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: 48 }}>
+                    <Checkbox
+                      indeterminate={someSelected}
+                      checked={allSelected}
+                      onChange={handleToggleSelectAll}
+                    />
+                  </TableCell>
                   <TableCell sx={{ fontWeight: 700, width: '20%' }}>
                     名称
                   </TableCell>
@@ -196,6 +260,12 @@ export default function DeckPresetPage() {
               <TableBody>
                 {presets.map((preset) => (
                   <TableRow key={preset.id} hover>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedIds.has(preset.id)}
+                        onChange={() => handleToggleSelect(preset.id)}
+                      />
+                    </TableCell>
                     <TableCell sx={{ verticalAlign: 'top' }}>
                       <Typography variant="body1" fontWeight={600}>
                         {preset.name}
@@ -300,6 +370,31 @@ export default function DeckPresetPage() {
             onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
           >
             {deleteMutation.isPending ? '删除中…' : '删除'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={batchDeleteOpen} onClose={() => setBatchDeleteOpen(false)}>
+        <DialogTitle>确认批量删除</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            确定删除选中的 {selectedIds.size} 条牌组预设吗？此操作不可撤销。
+          </DialogContentText>
+          {batchDeleteMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {(batchDeleteMutation.error as Error).message}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBatchDeleteOpen(false)}>取消</Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={batchDeleteMutation.isPending}
+            onClick={confirmBatchDelete}
+          >
+            {batchDeleteMutation.isPending ? '删除中…' : '删除'}
           </Button>
         </DialogActions>
       </Dialog>

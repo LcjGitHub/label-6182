@@ -382,6 +382,33 @@ def update_deck_preset(preset_id: int):
         conn.close()
 
 
+@app.post("/api/deck-presets/batch-delete")
+def batch_delete_deck_presets():
+    """批量删除牌组预设，接收编号数组逐条删除。"""
+    data = request.get_json(silent=True)
+    if not data or not isinstance(data.get("ids"), list):
+        return jsonify({"error": "请提供 ids 数组"}), 400
+    ids = data["ids"]
+    if not ids:
+        return jsonify({"error": "ids 数组不能为空"}), 400
+    invalid = [i for i in ids if not isinstance(i, int)]
+    if invalid:
+        return jsonify({"error": "ids 数组中的元素必须为整数"}), 400
+
+    conn = get_connection()
+    try:
+        deleted = 0
+        for preset_id in ids:
+            cursor = conn.execute(
+                "DELETE FROM deck_presets WHERE id = ?", (preset_id,)
+            )
+            deleted += cursor.rowcount
+        conn.commit()
+        return jsonify({"deleted": deleted})
+    finally:
+        conn.close()
+
+
 @app.delete("/api/deck-presets/<int:preset_id>")
 def delete_deck_preset(preset_id: int):
     """删除牌组预设。"""

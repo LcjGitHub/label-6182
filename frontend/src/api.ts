@@ -172,6 +172,20 @@ export async function deleteDeckPreset(id: number): Promise<void> {
   }
 }
 
+export async function batchDeleteDeckPresets(ids: number[]): Promise<number> {
+  const res = await fetch(`${API_BASE}/deck-presets/batch-delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? '批量删除失败');
+  }
+  const data = await res.json();
+  return data.deleted;
+}
+
 /**
  * 获取全部牌阵模板
  */
