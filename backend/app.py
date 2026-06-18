@@ -116,12 +116,24 @@ def list_records_by_date():
 
 @app.get("/api/records")
 def list_records():
-    """获取练习记录列表，按日期倒序。"""
+    """获取练习记录列表，按日期倒序，支持关键词模糊搜索。"""
+    keyword = request.args.get("keyword", "").strip()
     conn = get_connection()
     try:
-        rows = conn.execute(
-            "SELECT * FROM practice_records ORDER BY date DESC, id DESC"
-        ).fetchall()
+        if keyword:
+            search_pattern = f"%{keyword}%"
+            rows = conn.execute(
+                """
+                SELECT * FROM practice_records
+                WHERE spread_name LIKE ? OR key_cards LIKE ? OR summary LIKE ?
+                ORDER BY date DESC, id DESC
+                """,
+                (search_pattern, search_pattern, search_pattern),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM practice_records ORDER BY date DESC, id DESC"
+            ).fetchall()
         return jsonify([row_to_dict(row) for row in rows])
     finally:
         conn.close()

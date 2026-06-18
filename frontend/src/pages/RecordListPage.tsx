@@ -1,6 +1,8 @@
 import AddIcon from '@mui/icons-material/Add';
+import ClearIcon from '@mui/icons-material/Clear';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   Alert,
   Box,
@@ -15,7 +17,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  InputAdornment,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -37,11 +41,28 @@ function formatDate(date: string): string {
 export default function RecordListPage() {
   const queryClient = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<PracticeRecord | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [submittedKeyword, setSubmittedKeyword] = useState('');
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['records'],
-    queryFn: fetchRecords,
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ['records', submittedKeyword],
+    queryFn: () => fetchRecords(submittedKeyword),
   });
+
+  const handleSearch = () => {
+    setSubmittedKeyword(searchKeyword.trim());
+  };
+
+  const handleClear = () => {
+    setSearchKeyword('');
+    setSubmittedKeyword('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: deleteRecord,
@@ -90,8 +111,51 @@ export default function RecordListPage() {
         </Button>
       </Stack>
 
+      <Stack direction="row" spacing={2} mb={3} alignItems="center">
+        <TextField
+          fullWidth
+          placeholder="搜索牌阵名、关键牌或解读摘要..."
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isLoading}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+            endAdornment: searchKeyword && (
+              <InputAdornment position="end">
+                <Button
+                  size="small"
+                  onClick={handleClear}
+                  disabled={isLoading}
+                  sx={{ minWidth: 'auto', p: 0.5 }}
+                >
+                  <ClearIcon fontSize="small" />
+                </Button>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button
+          variant="contained"
+          startIcon={isFetching ? <CircularProgress size={16} color="inherit" /> : <SearchIcon />}
+          onClick={handleSearch}
+          disabled={isLoading || isFetching}
+          sx={{ minWidth: 100 }}
+        >
+          {isFetching ? '搜索中...' : '搜索'}
+        </Button>
+      </Stack>
+
       {records.length === 0 ? (
-        <Alert severity="info">暂无记录，点击「新建记录」开始练习吧。</Alert>
+        <Alert severity="info">
+          {submittedKeyword
+            ? `未找到包含「${submittedKeyword}」的记录，请尝试其他关键词。`
+            : '暂无记录，点击「新建记录」开始练习吧。'}
+        </Alert>
       ) : (
         <Stack spacing={2}>
           {records.map((record) => (

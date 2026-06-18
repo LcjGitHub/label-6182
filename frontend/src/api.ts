@@ -12,10 +12,14 @@ import type {
 const API_BASE = '/api';
 
 /**
- * 获取全部练习记录
+ * 获取练习记录列表，支持关键词搜索
+ * @param keyword - 搜索关键词（可选）
  */
-export async function fetchRecords(): Promise<PracticeRecord[]> {
-  const res = await fetch(`${API_BASE}/records`);
+export async function fetchRecords(keyword?: string): Promise<PracticeRecord[]> {
+  const url = keyword?.trim()
+    ? `${API_BASE}/records?keyword=${encodeURIComponent(keyword.trim())}`
+    : `${API_BASE}/records`;
+  const res = await fetch(url);
   if (!res.ok) {
     throw new Error('加载记录失败');
   }
