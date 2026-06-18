@@ -13,6 +13,7 @@ import {
   DialogContentText,
   DialogTitle,
   Paper,
+  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -48,6 +49,7 @@ export default function DeckPresetPage() {
   const [deleteTarget, setDeleteTarget] = useState<DeckPreset | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['deckPresets'],
@@ -73,18 +75,25 @@ export default function DeckPresetPage() {
 
   const deleteMutation = useMutation({
     mutationFn: deleteDeckPreset,
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['deckPresets'] });
       setDeleteTarget(null);
+      setSelectedIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     },
   });
 
   const batchDeleteMutation = useMutation({
     mutationFn: batchDeleteDeckPresets,
-    onSuccess: () => {
+    onSuccess: (deleted) => {
       queryClient.invalidateQueries({ queryKey: ['deckPresets'] });
       setSelectedIds(new Set());
       setBatchDeleteOpen(false);
+      setSuccessMessage(`已成功删除 ${deleted} 条牌组预设`);
     },
   });
 
@@ -201,6 +210,21 @@ export default function DeckPresetPage() {
 
   return (
     <>
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSuccessMessage(null)}
+          severity="success"
+          variant="filled"
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -211,16 +235,15 @@ export default function DeckPresetPage() {
           牌组预设管理
         </Typography>
         <Stack direction="row" spacing={1}>
-          {selectedIds.size > 0 && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteOutlineIcon />}
-              onClick={handleBatchDelete}
-            >
-              批量删除（{selectedIds.size}）
-            </Button>
-          )}
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteOutlineIcon />}
+            onClick={handleBatchDelete}
+            disabled={selectedIds.size === 0}
+          >
+            批量删除{selectedIds.size > 0 ? `（${selectedIds.size}）` : ''}
+          </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}

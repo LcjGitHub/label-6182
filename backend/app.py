@@ -387,13 +387,13 @@ def batch_delete_deck_presets():
     """批量删除牌组预设，接收编号数组逐条删除。"""
     data = request.get_json(silent=True)
     if not data or not isinstance(data.get("ids"), list):
-        return jsonify({"error": "请提供 ids 数组"}), 400
+        return jsonify({"error": "请求体格式错误，请提供待删除编号列表"}), 400
     ids = data["ids"]
     if not ids:
-        return jsonify({"error": "ids 数组不能为空"}), 400
+        return jsonify({"error": "待删除编号列表不能为空"}), 400
     invalid = [i for i in ids if not isinstance(i, int)]
     if invalid:
-        return jsonify({"error": "ids 数组中的元素必须为整数"}), 400
+        return jsonify({"error": "待删除编号列表中的元素必须为正整数"}), 400
 
     conn = get_connection()
     try:
