@@ -12,12 +12,22 @@ import type {
 const API_BASE = '/api';
 
 /**
- * 获取练习记录列表，支持关键词搜索
+ * 获取练习记录列表，支持关键词搜索和牌组筛选
  * @param keyword - 搜索关键词（可选）
+ * @param deck - 牌组名称（可选）
  */
-export async function fetchRecords(keyword?: string): Promise<PracticeRecord[]> {
-  const url = keyword?.trim()
-    ? `${API_BASE}/records?keyword=${encodeURIComponent(keyword.trim())}`
+export async function fetchRecords(
+  keyword?: string,
+  deck?: string,
+): Promise<PracticeRecord[]> {
+  const params = new URLSearchParams();
+  const trimmedKeyword = keyword?.trim();
+  const trimmedDeck = deck?.trim();
+  if (trimmedKeyword) params.append('keyword', trimmedKeyword);
+  if (trimmedDeck) params.append('deck', trimmedDeck);
+  const queryString = params.toString();
+  const url = queryString
+    ? `${API_BASE}/records?${queryString}`
     : `${API_BASE}/records`;
   const res = await fetch(url);
   if (!res.ok) {

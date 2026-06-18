@@ -17,7 +17,12 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControl,
   InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   Stack,
   TextField,
   Typography,
@@ -43,11 +48,22 @@ export default function RecordListPage() {
   const [deleteTarget, setDeleteTarget] = useState<PracticeRecord | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [submittedKeyword, setSubmittedKeyword] = useState('');
+  const [selectedDeck, setSelectedDeck] = useState('');
+
+  const { data: allRecords } = useQuery({
+    queryKey: ['records'],
+    queryFn: () => fetchRecords(),
+    staleTime: 1000 * 60,
+  });
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ['records', submittedKeyword],
-    queryFn: () => fetchRecords(submittedKeyword),
+    queryKey: ['records', submittedKeyword, selectedDeck],
+    queryFn: () => fetchRecords(submittedKeyword, selectedDeck),
   });
+
+  const deckOptions = Array.from(
+    new Set((allRecords ?? []).map((r) => r.deck).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, 'zh-CN'));
 
   const handleSearch = () => {
     setSubmittedKeyword(searchKeyword.trim());
@@ -61,6 +77,10 @@ export default function RecordListPage() {
     if (e.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  const handleDeckChange = (e: SelectChangeEvent<string>) => {
+    setSelectedDeck(e.target.value);
   };
 
   useEffect(() => {
@@ -116,43 +136,75 @@ export default function RecordListPage() {
         </Button>
       </Stack>
 
-      <Stack direction="row" spacing={2} mb={3} alignItems="center">
-        <TextField
-          fullWidth
-          placeholder="搜索牌阵名、关键牌或解读摘要..."
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isLoading}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: searchKeyword && (
-              <InputAdornment position="end">
-                <Button
-                  size="small"
-                  onClick={handleClear}
-                  disabled={isLoading || isFetching}
-                  sx={{ minWidth: 'auto', p: 0.5 }}
-                >
-                  <ClearIcon fontSize="small" />
-                </Button>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          variant="contained"
-          startIcon={isFetching ? <CircularProgress size={16} color="inherit" /> : <SearchIcon />}
-          onClick={handleSearch}
-          disabled={isLoading || isFetching}
-          sx={{ minWidth: 100 }}
-        >
-          {isFetching ? '搜索中...' : '搜索'}
-        </Button>
+      <Stack spacing={2} mb={3}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField
+            fullWidth
+            placeholder="搜索牌阵名、关键牌或解读摘要..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: searchKeyword && (
+                <InputAdornment position="end">
+                  <Button
+                    size="small"
+                    onClick={handleClear}
+                    disabled={isLoading || isFetching}
+                    sx={{ minWidth: 'auto', p: 0.5 }}
+                  >
+                    <ClearIcon fontSize="small" />
+                  </Button>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={isFetching ? <CircularProgress size={16} color="inherit" /> : <SearchIcon />}
+            onClick={handleSearch}
+            disabled={isLoading || isFetching}
+            sx={{ minWidth: 100 }}
+          >
+            {isFetching ? '搜索中...' : '搜索'}
+          </Button>
+        </Stack>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <FormControl sx={{ minWidth: 220 }} size="small">
+            <InputLabel id="deck-select-label">牌组筛选</InputLabel>
+            <Select
+              labelId="deck-select-label"
+              value={selectedDeck}
+              label="牌组筛选"
+              onChange={handleDeckChange}
+              disabled={isLoading}
+              displayEmpty
+            >
+              <MenuItem value="">全部牌组</MenuItem>
+              {deckOptions.map((deck) => (
+                <MenuItem key={deck} value={deck}>
+                  {deck}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {selectedDeck && (
+            <Button
+              size="small"
+              onClick={() => setSelectedDeck('')}
+              variant="outlined"
+              disabled={isLoading || isFetching}
+            >
+              清除牌组筛选
+            </Button>
+          )}
+        </Stack>
       </Stack>
 
       {isFetching ? (
@@ -161,8 +213,10 @@ export default function RecordListPage() {
         </Box>
       ) : records.length === 0 ? (
         <Alert severity="info">
-          {submittedKeyword
-            ? `未找到包含「${submittedKeyword}」的记录，请尝试其他关键词。`
+          {submittedKeyword || selectedDeck
+            ? `未找到${
+                selectedDeck ? `牌组「${selectedDeck}」中` : ''
+              }${submittedKeyword ? `包含「${submittedKeyword}」的` : '符合条件的'}记录，请尝试其他条件。`
             : '暂无记录，点击「新建记录」开始练习吧。'}
         </Alert>
       ) : (
